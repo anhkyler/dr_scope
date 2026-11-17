@@ -1,0 +1,19 @@
+resources:
+  jobs:
+    usaspending_job:
+      name: usaspending_job
+      max_concurrent_runs: 1
+      tasks:
+        - task_key: load_awards
+          environment_key: default
+          spark_python_task:
+            python_file: ../src/learner/usaspending_awards.py
+            parameters:
+              - --catalog
+              - ${var.catalog}
+              - --schema
+              - ${resources.schemas.app_schema.name}   # dùng lại schema bundle đã tạo
+      environments:
+        - environment_key: default
+          spec:
+            environment_version: "2"
