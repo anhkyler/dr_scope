@@ -1,0 +1,31 @@
+resources:
+  schemas:
+    app_schema:
+      catalog_name: ${var.catalog}
+      name: ${var.schema}
+      comment: Schema do bundle quản lý
+
+  jobs:
+    etl_job:
+      name: etl_job
+      max_concurrent_runs: 1
+      # Free Edition giới hạn quota/ngày => để schedule tắt mặc định, bật khi cần.
+      # schedule:
+      #   quartz_cron_expression: "0 0 6 * * ?"
+      #   timezone_id: Asia/Ho_Chi_Minh
+      tasks:
+        - task_key: build_sample_table
+          # Free Edition chỉ có serverless: KHÔNG khai báo job_clusters/new_cluster,
+          # chỉ dùng environment_key.
+          environment_key: default
+          spark_python_task:
+            python_file: ../src/etl.py
+            parameters:
+              - --catalog
+              - ${var.catalog}
+              - --schema
+              - ${resources.schemas.app_schema.name}
+      environments:
+        - environment_key: default
+          spec:
+            environment_version: "2"

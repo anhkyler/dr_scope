@@ -1,0 +1,39 @@
+# Databricks Asset Bundle – cấu hình gốc
+# Free Edition chỉ có 1 workspace => dev và prod nằm chung workspace,
+# tách nhau bằng target (đường dẫn deploy + tiền tố tên + schema riêng).
+
+bundle:
+  name: demo_free_cicd
+
+include:
+  - resources/*.yml
+
+variables:
+  catalog:
+    description: Catalog Unity Catalog (Free Edition mặc định có catalog "workspace")
+    default: workspace
+  schema:
+    description: Schema đích cho bảng output
+    default: demo
+
+workspace:
+  # Thay bằng URL workspace Free Edition của bạn.
+  # Trong CI có thể bỏ trống và dùng biến môi trường DATABRICKS_HOST.
+  host: https://dbc-fac00343-a7e8.cloud.databricks.com
+
+targets:
+  # Dev: deploy từ máy cá nhân (databricks bundle deploy -t dev).
+  # mode=development tự thêm tiền tố "[dev <user>]" vào tên job, tạm dừng schedule.
+  dev:
+    mode: development
+    default: true
+
+  # Prod: chỉ GitHub Actions deploy (bằng service principal) khi merge vào main.
+  prod:
+    mode: production
+    variables:
+      schema: demo_prod
+    permissions:
+      # Cho tài khoản cá nhân của bạn quyền xem/quản lý job do SP tạo ra
+      - user_name: hieuphso@gmail.com
+        level: CAN_MANAGE

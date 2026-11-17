@@ -1,0 +1,53 @@
+# CD: merge vào main => deploy bundle lên target prod bằng service principal.
+name: Deploy to Databricks
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      run_after_deploy:
+        description: "Chạy smoke test job sau khi deploy? (tốn quota Free Edition)"
+        type: boolean
+        default: false
+
+# Không bao giờ cho 2 lần deploy chạy song song
+concurrency:
+  group: deploy-prod
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # GitHub Environment "prod": nơi chứa secrets của SP.
+    # (Required reviewers chỉ có cho public repo trên gói Free.)
+    environment: prod
+    env:
+      DATABRICKS_HOST: ${{ vars.DATABRICKS_HOST }}
+      DATABRICKS_CLIENT_ID: ${{ secrets.DATABRICKS_CLIENT_ID }}
+      DATABRICKS_CLIENT_SECRET: ${{ secrets.DATABRICKS_CLIENT_SECRET }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Unit tests (chặn deploy nếu test hỏng)
+        run: |
+          pip install -r requirements-dev.txt
+          pytest -q
+
+      - uses: databricks/setup-cli@v1.26.0
+
+      - name: Validate
+        run: databricks bundle validate -t prod
+
+      - name: Deploy
+        run: databricks bundle deploy -t prod --auto-approve
+
+      - name: Smoke test (tuỳ chọn)
+        if: github.event_name == 'workflow_dispatch' && inputs.run_after_deploy
+        run: databricks bundle run etl_job -t prod

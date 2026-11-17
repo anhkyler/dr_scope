@@ -1,0 +1,44 @@
+# CI: chạy trên mỗi Pull Request vào main.
+# Không deploy gì cả – chỉ test + validate bundle.
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install test deps
+        run: pip install -r requirements-dev.txt
+
+      - name: Unit tests (Spark local trên runner, không tốn quota Databricks)
+        run: pytest -q
+
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # PR từ fork không đọc được secrets => bỏ qua validate cho fork
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    env:
+      DATABRICKS_HOST: ${{ vars.DATABRICKS_HOST }}
+      DATABRICKS_CLIENT_ID: ${{ secrets.DATABRICKS_CLIENT_ID }}
+      DATABRICKS_CLIENT_SECRET: ${{ secrets.DATABRICKS_CLIENT_SECRET }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: databricks/setup-cli@v1.26.0
+      - name: Validate bundle (prod target)
+        run: databricks bundle validate -t prod
