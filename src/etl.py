@@ -1,6 +1,16 @@
 """Job ETL mẫu: tạo một bảng nhỏ trong Unity Catalog."""
 
 import argparse
+import sys
+from pathlib import Path
+
+# Cho phép `from common.download import ...` khi chạy dưới dạng spark_python_task.
+# Serverless chạy file qua exec() nên không có __file__; đường dẫn nằm ở sys.argv[0].
+try:
+    _SRC_DIR = Path(__file__).resolve().parent
+except NameError:
+    _SRC_DIR = Path(sys.argv[0]).resolve().parent
+sys.path.insert(0, str(_SRC_DIR))
 
 from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql import functions as F
