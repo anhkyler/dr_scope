@@ -1,0 +1,34 @@
+resources:
+  jobs:
+    hello_then_download_job:         # chạy: databricks bundle run hello_then_download_job
+      name: hello_then_download_job
+      max_concurrent_runs: 1
+      tasks:
+        # Bước 1: in Hello World
+        - task_key: say_hello
+          environment_key: default   # Free Edition chỉ có serverless
+          spark_python_task:
+            python_file: ../src/learner/hello.py
+
+        # Bước 2: chỉ chạy sau khi say_hello thành công
+        - task_key: download_customers_zip
+          depends_on:
+            - task_key: say_hello
+          environment_key: default
+          spark_python_task:
+            python_file: ../src/learner/customers_download.py
+            parameters:
+              - --catalog
+              - ${var.catalog}
+              - --schema
+              - ${resources.schemas.app_schema.name}
+              - --volume
+              - raw
+              - --url
+              - "https://drive.google.com/uc?id=1yyL20BNKv3PxJRJVjJ_2Q-HidvIUis45&export=download"
+              - --file-name
+              - customers-100.zip
+      environments:
+        - environment_key: default
+          spec:
+            environment_version: "2"
