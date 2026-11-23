@@ -18,9 +18,9 @@
 ### 1. Databricks Free Edition
 1. Đăng nhập workspace → **Settings → Identity and access → Service principals → Add new**, đặt tên `github-cicd`.
 2. Mở SP vừa tạo → tab **Secrets → Generate secret** → copy **Client ID** và **Secret** (secret chỉ hiện một lần).
-3. Cho SP quyền dùng catalog `workspace`: chạy trong SQL editor
+3. Cho SP quyền dùng catalog `pilot_so_hieu` (catalog chứa toàn bộ dữ liệu của project): chạy trong SQL editor
    ```sql
-   GRANT USE CATALOG, CREATE SCHEMA ON CATALOG workspace TO `<client-id-của-SP>`;
+   GRANT USE CATALOG, CREATE SCHEMA ON CATALOG pilot_so_hieu TO `<client-id-của-SP>`;
    ```
 4. Copy URL workspace (dạng `https://dbc-fac00343-a7e8.cloud.databricks.com`).
 

@@ -10,8 +10,8 @@ include:
 
 variables:
   catalog:
-    description: Catalog Unity Catalog (Free Edition mặc định có catalog "workspace")
-    default: workspace
+    description: Catalog Unity Catalog chứa toàn bộ dữ liệu của project (schema, bảng, volume)
+    default: pilot_so_hieu
   schema:
     description: Schema đích cho bảng output
     default: demo

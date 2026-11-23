@@ -16,31 +16,32 @@ from pyspark.sql import functions as F  # noqa: E402
 from pyspark.sql.types import DoubleType, LongType, StringType, StructField, StructType  # noqa: E402
 
 from common.download import fetch_json  # noqa: E402
+from learner.schemas import AWARDS_API_COLUMNS, AWARDS_RAW_SCHEMA, AWARDS_TABLE
 
 URL = "https://api.usaspending.gov/api/v2/search/spending_by_award/"
 
 # Tên field trong API  ->  tên cột trong bảng
-COLUMNS = {
-    "internal_id": "internal_id",
-    "Award ID": "award_id",
-    "Recipient Name": "recipient_name",
-    "Award Amount": "award_amount",
-    "Awarding Agency": "awarding_agency",
-    "Start Date": "start_date",
-    "End Date": "end_date",
-    "Description": "description",
-}
+# COLUMNS = {
+#     "internal_id": "internal_id",
+#     "Award ID": "award_id",
+#     "Recipient Name": "recipient_name",
+#     "Award Amount": "award_amount",
+#     "Awarding Agency": "awarding_agency",
+#     "Start Date": "start_date",
+#     "End Date": "end_date",
+#     "Description": "description",
+# }
 
-RAW_SCHEMA = StructType([
-    StructField("internal_id", LongType()),
-    StructField("award_id", StringType()),
-    StructField("recipient_name", StringType()),
-    StructField("award_amount", DoubleType()),
-    StructField("awarding_agency", StringType()),
-    StructField("start_date", StringType()),
-    StructField("end_date", StringType()),
-    StructField("description", StringType()),
-])
+# RAW_SCHEMA = StructType([
+#     StructField("internal_id", LongType()),
+#     StructField("award_id", StringType()),
+#     StructField("recipient_name", StringType()),
+#     StructField("award_amount", DoubleType()),
+#     StructField("awarding_agency", StringType()),
+#     StructField("start_date", StringType()),
+#     StructField("end_date", StringType()),
+#     StructField("description", StringType()),
+# ])
 
 
 def fetch_awards(limit: int = 5) -> list[dict]:
@@ -84,7 +85,7 @@ def main() -> None:
     spark = SparkSession.builder.getOrCreate()
     df = to_dataframe(spark, fetch_awards(args.limit))
 
-    target = f"{args.catalog}.{args.schema}.usaspending_awards"
+    target = f"{args.catalog}.{args.schema}.{AWARDS_TABLE}"
     df.write.mode("overwrite").option("overwriteSchema", "true").saveAsTable(target)
     print(f"Wrote {df.count()} rows to {target}")
 
